@@ -6,6 +6,8 @@ Sector::Sector(){
     board_size = 100;
     Point p = Point('+',0);
     map = vector<vector<Point>> (board_size,vector<Point>(board_size,p));
+    srand (time(NULL));
+    number_victims = rand()%3 + 1;
 }
 
 // Robert Jenkins' 96 bit Mix Function
@@ -62,26 +64,41 @@ bool random_generator(int chance,bool last_painted,int seed1, int seed2){
 
 }
 
+pair<int,int> Sector::random_coord(){
+    pair<int,int> p;
+    srand(mix(clock(), time(NULL), getpid()));
+    p.first = rand()%board_size;
+    srand(mix(clock(), time(NULL), getpid()));
+    p.second = rand()%board_size;
+    if(placed.size() != 0){
+        for(int j = 0; j < placed.size(); ++j ){
+            if(placed[j].first == p.first and placed[j].second == p.second ){
+                p = random_coord();
+                j = placed.size();
+            }
+        }
+    }
+    placed.push_back(p);
+    return p;
+}
+
 void Sector::place_victims(int number_victims){
+    
     for(int i = 0; i < number_victims; ++i){
-        srand(mix(clock(), time(NULL), getpid()));
-        int x = rand()%board_size;
-        srand(mix(clock(), time(NULL), getpid()));
-        int y = rand()%board_size;
+        pair<int,int> coord = random_coord();
+   
+ 
         Point p;
         p.first = 'V';
         p.second = 0;
-        map[x][y] = p;
+        map[coord.first][coord.second] = p;
     }
 }
 
 void Sector::generate_avalanche(){
     srand (time(NULL));
     bool victims = rand()%2;
-    int number_victims = 0;
-    if(victims){
-        number_victims = rand()%3 + 1;
-    } 
+
     vector<bool> already_painted (board_size,false);
     int chance = -10;
     bool last_painted = false;
@@ -117,8 +134,8 @@ void Sector::generate_avalanche(){
         chance = 1;
         
     }
-    place_victims(number_victims);
-    if(not victims) cout << "FALSE" << endl;
+    if(victims) place_victims(number_victims);
+    else cout << "FALSE" << endl;
 }
 
 
